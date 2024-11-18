@@ -1,55 +1,37 @@
-const express = require('express');
-const helmet = require('helmet');
-const cors = require('cors');
-const crypto = require('crypto'); // Hash generáláshoz szükséges
+const { app, HttpRequest, HttpResponseInit } = require('@azure/functions');
 
-const app = express();
-const port = process.env.PORT || 8080;
+// Tároló az utolsó parancs számára
+let lastCommand = 'sss';
 
-// Hash a használni kívánt inline scripthez
-const scriptContent = "console.log('Hello World!');";
-const hash = crypto.createHash('sha256').update(scriptContent).digest('base64');
+// POST metódus - JSON üzenet fogadása
+app.http('commandHandler', {
+  methods: ['POST', 'GET'],
+  authLevel: 'function', // Autentikáció szintje
+  handler: async (request, context) => {
+    if (request.method === 'POST') {
+      try {
+        const body = await request.json();
+        const { command } = body;
 
-// Helmet CSP beállítás hash-sel
-app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: [
-          "'self'",
-          'sha256'+hash // Inline script engedélyezése hash-al
-        ],
-        connectSrc: ["'self'", "https://car-driving-function-app.azurewebsites.net"], // Engedélyezett endpoint
-      },
-    },
-  })
-);
+        if (!command) {
+          return { status: 400, body: 'Missing "command" in request body.' };
+        }
 
-// CORS pontos engedélyezése
-app.use(
-  cors({
-    origin: '*', // Átmeneti megoldásként minden domain-t engedélyez
-  })
-);
+        lastCommand = command; // Tároljuk az utolsó parancsot
+        context.log(`Received command: ${command}`);
 
-// JSON kérések feldolgozása
-app.use(express.json());
+        return { status: 200, body: 'Command received successfully!' };
+      } catch (error) {
+        context.log.error('Error processing POST request:', error);
+        return { status: 500, body: 'Internal server error.' };
+      }
+    }
 
-// API endpoint
-app.post('/api/command', (req, res) => {
-  const { command } = req.body;
-  console.log(`Received command: ${command}`);
-  res.status(200).send('Command received!');
-});
+    if (request.method === 'GET') {
+      context.log('Fetching the last command...');
+      return { status: 200, body: { lastCommand } };
+    }
 
-// Hibakezelő
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send('Something went wrong!');
-});
-
-// Szerver indítása
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+    return { status: 405, body: 'Method not allowed.' };
+  },
 });
