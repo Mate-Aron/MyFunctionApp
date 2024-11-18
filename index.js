@@ -11,19 +11,22 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'"],
-        connectSrc: ["'self'", "https://car-driving-function-app.azurewebsites.net/api/command"],
+        scriptSrc: ["'self'", "'unsafe-inline'"], // Ha mindenképp kell inline script
+        connectSrc: ["'self'", "https://car-driving-function-app.azurewebsites.net"],
       },
     },
   })
 );
 
-// CORS engedélyezése
-app.use(cors());
+// CORS pontos engedélyezése
+app.use(cors({
+  origin: ['https://car-driving-function-app.azurewebsites.net'], // Engedélyezett domain(ek)
+}));
 
 // JSON kérések feldolgozása
 app.use(express.json());
 
+// API endpoint
 app.post('/api/command', (req, res) => {
   const { command } = req.body;
   console.log(`Received command: ${command}`);
