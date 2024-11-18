@@ -1,37 +1,17 @@
-const { app, HttpRequest, HttpResponseInit } = require('@azure/functions');
+const express = require('express');
+const app = express();
+const port = process.env.PORT || 8080;
 
-// Tároló az utolsó parancs számára
-let lastCommand = 'sss';
+app.use(express.json()); // JSON kérések kezelése
 
-// POST metódus - JSON üzenet fogadása
-app.http('commandHandler', {
-  methods: ['POST', 'GET'],
-  authLevel: 'function', // Autentikáció szintje
-  handler: async (request, context) => {
-    if (request.method === 'POST') {
-      try {
-        const body = await request.json();
-        const { command } = body;
+// Parancs fogadása
+app.post('/api/command', (req, res) => {
+  const { command } = req.body;
+  console.log(`Received command: ${command}`);
+  res.status(200).send({ message: 'Command received!' });
+});
 
-        if (!command) {
-          return { status: 400, body: 'Missing "command" in request body.' };
-        }
-
-        lastCommand = command; // Tároljuk az utolsó parancsot
-        context.log(`Received command: ${command}`);
-
-        return { status: 200, body: 'Command received successfully!' };
-      } catch (error) {
-        context.log.error('Error processing POST request:', error);
-        return { status: 500, body: 'Internal server error.' };
-      }
-    }
-
-    if (request.method === 'GET') {
-      context.log('Fetching the last command...');
-      return { status: 200, body: { lastCommand } };
-    }
-
-    return { status: 405, body: 'Method not allowed.' };
-  },
+// Azure Web App indítása
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });
