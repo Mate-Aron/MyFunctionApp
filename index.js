@@ -1,27 +1,37 @@
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
+const crypto = require('crypto'); // Hash generáláshoz szükséges
 
 const app = express();
 const port = process.env.PORT || 8080;
 
-// Helmet CSP beállítás
+// Hash a használni kívánt inline scripthez
+const scriptContent = "console.log('Hello World!');";
+const hash = crypto.createHash('sha256').update(scriptContent).digest('base64');
+
+// Helmet CSP beállítás hash-sel
 app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'"], // Ha mindenképp kell inline script
-        connectSrc: ["'self'", "https://car-driving-function-app.azurewebsites.net"],
+        scriptSrc: [
+          "'self'",
+          `'sha256-${hash}'` // Inline script engedélyezése hash-al
+        ],
+        connectSrc: ["'self'", "https://car-driving-function-app.azurewebsites.net"], // Engedélyezett endpoint
       },
     },
   })
 );
 
 // CORS pontos engedélyezése
-app.use(cors({
-  origin: ['https://car-driving-function-app.azurewebsites.net'], // Engedélyezett domain(ek)
-}));
+app.use(
+  cors({
+    origin: '*', // Átmeneti megoldásként minden domain-t engedélyez
+  })
+);
 
 // JSON kérések feldolgozása
 app.use(express.json());
