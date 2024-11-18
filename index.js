@@ -18,7 +18,7 @@ app.use(
         defaultSrc: ["'self'"],
         scriptSrc: [
           "'self'",
-          `'sha256-${hash}'` // Inline script engedélyezése hash-al
+          'sha256'+hash // Inline script engedélyezése hash-al
         ],
         connectSrc: ["'self'", "https://car-driving-function-app.azurewebsites.net"], // Engedélyezett endpoint
       },
