@@ -3,7 +3,7 @@ const app = express();
 const port = process.env.PORT || 8080;
 
 app.get('/', (req, res) => {
-  res.send('NEM MEGY!');
+  res.send('NEM!');
 });
 
 app.listen(port, () => {
