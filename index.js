@@ -5,7 +5,7 @@ const port = process.env.PORT || 8080;
 // JSON kérések feldolgozása
 app.use(express.json());
 
-app.post('/', (req, res) => {
+app.post('/api/command', (req, res) => {
   const { command } = req.body;
   console.log(`Received command: ${command}`);
   res.status(200).send('Command received!');
