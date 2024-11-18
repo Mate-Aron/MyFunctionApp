@@ -2,8 +2,13 @@ const express = require('express');
 const app = express();
 const port = process.env.PORT || 8080;
 
-app.get('/', (req, res) => {
-  res.send('Megy!');
+// JSON kérések feldolgozása
+app.use(express.json());
+
+app.post('/', (req, res) => {
+  const { command } = req.body;
+  console.log(`Received command: ${command}`);
+  res.status(200).send('Command received!');
 });
 
 app.listen(port, () => {
